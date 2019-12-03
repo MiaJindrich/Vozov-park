@@ -45,53 +45,59 @@ class Vozovy_park():
                 vhodne_vozy_podle_dojezdu.append(i)
         return vhodne_vozy_podle_dojezdu
 
-    def najdi_vozy_podle_spotreby(self, pozadovana_kapacita, vzdalenost):
+    def najdi_vozy_podle_nakladu(self, pozadovana_kapacita, vzdalenost, cena_nafty, cena_elektriny):
         vhodne_vozy = self.najdi_vozy_podle_paliva(pozadovana_kapacita, vzdalenost)
-        nejnizsi = 0
+        nejnizsi_naklady = 0
         for i in vhodne_vozy:
-            naklady = i.motor.realne_naklady(vzdalenost)
-            if nejnizsi == 0:
-                nejnizsi = naklady
+            naklady = i.motor.realna_cena(vzdalenost, cena_nafty, cena_elektriny)
+            if nejnizsi_naklady == 0:
+                nejnizsi_naklady = naklady
                 vuz_s_nejnizsi_spotrebou = i
                 continue
-            if naklady < nejnizsi:
-                nejnizsi = naklady
+            if naklady < nejnizsi_naklady:
+                nejnizsi_naklady = naklady
                 vuz_s_nejnizsi_spotrebou = i
         return vuz_s_nejnizsi_spotrebou
 
 
 class Motor():
-    def __init__(self, naklady):
-        # náklady v l/100km
-        self.naklady = naklady
+    def __init__(self, spotreba):
+        # spotřeba v l/100km
+        self.spotreba = spotreba
     
-    def realne_naklady(self, vzdalenost):
-        realne_naklady = self.naklady*vzdalenost/100
-        return realne_naklady
-
 class Spalovaci_motor(Motor):
-    pass
+    def realna_spotreba(self, vzdalenost):
+        realna_spotreba = self.spotreba*vzdalenost/100
+        return realna_spotreba
+
+    def realna_cena(self, vzdalenost, cena_nafty, cena_elektriny):
+        realna_cena = cena_nafty*self.realna_spotreba(vzdalenost)
+        return realna_cena
 
 class Elektromotor(Motor):
-    def __init__(self, naklady, dojezd):
-        super().__init__(naklady)
-        self.dojezd = dojezd
-
-class Hybrid(Motor):
-    def __init__(self, naklady, dojezd):
-        super().__init__(naklady)
+    def __init__(self, dojezd):
         self.dojezd = dojezd
     
-    def realne_naklady(self, vzdalenost):
-        realne_naklady = (self.naklady*self.dojezd + (vzdalenost-self.dojezd)*self.naklady*1.6)/100
-        return realne_naklady
+    def realna_cena(self, vzdalenost, cena_nafty, cena_elektriny):
+        realna_cena = cena_elektriny*vzdalenost
+        return realna_cena
+
+class Hybrid(Motor):
+    def __init__(self, spotreba, dojezd):
+        super().__init__(spotreba)
+        self.dojezd = dojezd
+    
+    def realna_cena(self, vzdalenost, cena_nafty, cena_elektriny):
+        realna_cena = cena_elektriny*self.dojezd + (((vzdalenost-self.dojezd)*self.spotreba)/100)*cena_nafty
+        return realna_cena
 
 
-cena = int(input("Jaká je cena paliva za 1l: "))
+cena_nafty = int(input("Jaká je cena nafty za 1l: "))
+cena_elektriny = int(input("Jaká je cena elektřiny na 1km jízdy: "))
 
-vuz1 = Vuz(kapacita = 50, spz = "7P2 8745", motor = Spalovaci_motor(naklady = 36))
-vuz2 = Vuz(kapacita = 30, spz = "3T6 9864", motor = Elektromotor(naklady = 23, dojezd = 120))
-vuz3 = Vuz(kapacita = 10, spz = "TD 97GV0", motor = Elektromotor(naklady = 12, dojezd = 150))
+vuz1 = Vuz(kapacita = 50, spz = "7P2 8745", motor = Spalovaci_motor(spotreba = 36))
+vuz2 = Vuz(kapacita = 30, spz = "3T6 9864", motor = Elektromotor(dojezd = 120))
+vuz3 = Vuz(kapacita = 10, spz = "TD 97GV0", motor = Elektromotor(dojezd = 150))
 vozy = [vuz1, vuz2, vuz3]
 
 vozovy_park = Vozovy_park()
@@ -99,11 +105,11 @@ for vuz in vozy:
     vozovy_park.pridej_vuz(vuz)
 
 # přijde mi nový vůz:
-vuz4 = Vuz(kapacita = 40, spz = "G99 LV60", motor = Hybrid(naklady = 24, dojezd = 80))
+vuz4 = Vuz(kapacita = 40, spz = "G99 LV60", motor = Hybrid(spotreba = 32, dojezd = 80))
 vozovy_park.pridej_vuz(vuz4) 
 
 pozadovana_kapacita = 20
 vzdalenost = int(input("Jak dlouhá bude cesta (v km)? "))
 
-vuz_s_nejnizsi_spotrebou = vozovy_park.najdi_vozy_podle_spotreby(pozadovana_kapacita, vzdalenost)
+vuz_s_nejnizsi_spotrebou = vozovy_park.najdi_vozy_podle_nakladu(pozadovana_kapacita, vzdalenost, cena_nafty, cena_elektriny)
 print(vuz_s_nejnizsi_spotrebou)
