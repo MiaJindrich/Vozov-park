@@ -1,3 +1,5 @@
+# program na základě ceny nafty a elektřiny a vzdálenosti cesty doporučí vůz s nejmenšími náklady na dopravu
+
 class Vuz:
     def __init__(self, kapacita, spz, motor):
         self.kapacita = kapacita
@@ -112,4 +114,4 @@ pozadovana_kapacita = 20
 vzdalenost = int(input("Jak dlouhá bude cesta (v km)? "))
 
 vuz_s_nejnizsi_spotrebou = vozovy_park.najdi_vozy_podle_nakladu(pozadovana_kapacita, vzdalenost, cena_nafty, cena_elektriny)
-print(vuz_s_nejnizsi_spotrebou)
+print("Doporučený vůz:" ,vuz_s_nejnizsi_spotrebou)
